@@ -1,0 +1,55 @@
+body {
+  background-color: #1a1a1a; /* Dark background like a casino floor */
+  color: white;
+  font-family: 'Courier New', Courier, monospace;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+  margin: 0;
+}
+
+#game-container {
+  text-align: center;
+  background: #333;
+  padding: 40px;
+  border: 8px solid #555;
+  border-radius: 20px;
+  box-shadow: 0 0 50px rgba(0,0,0,0.5);
+}
+
+.slot-machine {
+  display: flex;
+  gap: 15px;
+  background: #111;
+  padding: 20px;
+  border-radius: 10px;
+  margin-bottom: 20px;
+  border: 4px solid #f1c40f; /* Gold border */
+}
+
+.reel {
+  width: 100px;
+  height: 100px;
+  overflow: hidden;
+  background: #eee;
+  border-radius: 8px;
+  border: 2px solid #000;
+  color: #000;
+}
+
+.interface button {
+  padding: 15px 30px;
+  font-size: 1.2rem;
+  background: #e74c3c;
+  color: white;
+  border: none;
+  border-bottom: 5px solid #c0392b;
+  cursor: pointer;
+  border-radius: 5px;
+}
+
+.interface button:active {
+  border-bottom: 0;
+  transform: translateY(4px);
+}
