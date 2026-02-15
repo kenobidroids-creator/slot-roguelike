@@ -3,115 +3,116 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Roguelite Slots</title>
+    <title>Slot Roguelike</title>
     <style>
-        body { background-color: #121212; color: #e0e0e0; font-family: 'Segoe UI', sans-serif; display: flex; justify-content: center; padding: 40px 0; margin: 0; gap: 20px; }
-        
-        /* Sidebar Styles */
-        #inventory-sidebar { width: 180px; background: #1e1e1e; padding: 20px; border-radius: 20px; border: 2px solid #333; height: fit-content; }
-        .sidebar-title { font-size: 0.8rem; font-weight: bold; color: #888; margin-bottom: 15px; text-transform: uppercase; letter-spacing: 1px; }
-        .inventory-item { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; background: #252525; padding: 10px; border-radius: 10px; border: 1px solid #333; }
-        .shard-box { margin-top: 20px; padding-top: 15px; border-top: 1px solid #333; }
-        
-        /* Main Container */
-        #game-container { background: #1e1e1e; padding: 30px; border-radius: 24px; border: 4px solid #333; box-shadow: 0 20px 50px rgba(0,0,0,0.8); text-align: center; width: 420px; position: relative; }
-        
-        .stats-bar { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 15px; }
-        .gold-total { font-size: 1.4rem; font-weight: bold; color: #f1c40f; }
-        .counters { text-align: right; font-size: 0.75rem; color: #888; line-height: 1.4; }
-
-        /* Rent Safe UI */
-        .safe-container { background: #2c3e50; padding: 12px; border-radius: 15px; margin-bottom: 20px; border: 1px solid #34495e; display: flex; align-items: center; justify-content: space-between; }
-        .safe-btn { background: #3498db; color: white; border: none; width: 35px; height: 35px; border-radius: 8px; cursor: pointer; font-size: 1.2rem; font-weight: bold; }
-        .safe-info { text-align: center; }
-        .safe-amount { color: #5dade2; font-size: 1.1rem; font-weight: bold; margin-top: 2px; }
-
-        /* Reels */
-        .slot-machine { background: #000; padding: 20px; border-radius: 15px; margin-bottom: 20px; border: 2px solid #444; display: flex; gap: 10px; justify-content: center; }
-        .reel { width: 100px; height: 100px; overflow: hidden; background: white; border-radius: 12px; }
-        .symbols-container { display: flex; flex-direction: column; }
-        .symbol { width: 100px; height: 100px; display: flex; align-items: center; justify-content: center; font-size: 3.5rem; }
-
-        /* Spin Button */
-        #spin-btn { 
-            padding: 18px; font-size: 1.4rem; background: #e74c3c; color: white; border: none; 
-            border-radius: 15px; cursor: pointer; width: 100%; font-weight: bold; text-transform: uppercase;
-            box-shadow: 0 6px #c0392b; transition: all 0.1s;
+        /* Responsive Layout */
+        body { 
+            background-color: #121212; color: #e0e0e0; font-family: 'Segoe UI', sans-serif; 
+            display: flex; flex-direction: row; flex-wrap: wrap; justify-content: center; 
+            padding: 20px 10px; margin: 0; gap: 20px; 
         }
-        #spin-btn:active { transform: translateY(3px); box-shadow: 0 3px #c0392b; }
-        #spin-btn:disabled { background: #444; box-shadow: none; cursor: not-allowed; color: #777; }
 
-        /* Paytable */
-        .paytable { margin-top: 25px; background: #252525; padding: 15px; border-radius: 15px; border: 1px solid #333; }
-        .pay-row { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #333; font-size: 0.85rem; }
-        .pay-row:last-child { border-bottom: none; }
-        .payout-val { font-weight: bold; color: #f1c40f; }
+        #inventory-sidebar { 
+            width: 180px; background: #1e1e1e; padding: 20px; border-radius: 20px; 
+            border: 2px solid #333; height: fit-content; box-sizing: border-box;
+        }
 
-        /* Overlays */
-        .overlay { display: none; position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.96); border-radius: 20px; flex-direction: column; align-items: center; justify-content: center; z-index: 100; padding: 30px; box-sizing: border-box; }
-        .shop-items { display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; margin: 20px 0; }
-        .shop-item { background: #333; padding: 15px; border-radius: 12px; border: 2px solid #555; width: 85px; cursor: pointer; text-align: center; }
-        .shop-item.remove { border-color: #e74c3c; }
+        #game-container { 
+            background: #1e1e1e; padding: 20px; border-radius: 24px; border: 4px solid #333; 
+            box-shadow: 0 20px 50px rgba(0,0,0,0.8); text-align: center; 
+            width: 100%; max-width: 420px; position: relative; box-sizing: border-box;
+        }
 
-        #win-msg { height: 30px; font-size: 1.4rem; font-weight: bold; margin-bottom: 10px; }
-        .pop-win { color: #2ecc71; animation: pop 0.3s ease; }
-        .shake-loss { color: #e74c3c; animation: shake 0.3s ease; }
-        @keyframes pop { 0% { transform: scale(0.8); } 100% { transform: scale(1); } }
-        @keyframes shake { 0%, 100% { transform: translateX(0); } 25% { transform: translateX(-5px); } 75% { transform: translateX(5px); } }
+        /* Mobile Adjustments */
+        @media (max-width: 600px) {
+            body { flex-direction: column; align-items: center; }
+            #inventory-sidebar { order: 2; width: 100%; max-width: 420px; }
+            #game-container { order: 1; }
+        }
+
+        .stats-bar { display: flex; justify-content: space-between; margin-bottom: 15px; }
+        .gold-total { font-size: 1.4rem; font-weight: bold; color: #f1c40f; }
+        
+        .safe-container { 
+            background: #2c3e50; padding: 12px; border-radius: 15px; margin-bottom: 20px; 
+            border: 1px solid #34495e; display: flex; align-items: center; justify-content: space-between; 
+        }
+        .safe-btn { 
+            background: #3498db; color: white; border: none; width: 40px; height: 40px; 
+            border-radius: 10px; cursor: pointer; font-size: 1.2rem;
+        }
+
+        .slot-machine { 
+            background: #000; padding: 15px; border-radius: 15px; margin-bottom: 20px; 
+            border: 2px solid #444; display: flex; gap: 8px; justify-content: center; 
+        }
+        .reel { 
+            width: 30%; max-width: 100px; aspect-ratio: 1/1; overflow: hidden; 
+            background: white; border-radius: 12px; position: relative;
+        }
+        .symbol { width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; font-size: 2.2rem; }
+
+        #spin-btn { 
+            padding: 20px; font-size: 1.4rem; background: #e74c3c; color: white; border: none; 
+            border-radius: 15px; cursor: pointer; width: 100%; font-weight: bold; 
+            box-shadow: 0 6px #c0392b; -webkit-tap-highlight-color: transparent;
+        }
+        #spin-btn:disabled { background: #444; box-shadow: none; opacity: 0.6; }
+
+        .overlay { 
+            display: none; position: absolute; top: 0; left: 0; width: 100%; height: 100%; 
+            background: rgba(0,0,0,0.97); border-radius: 20px; flex-direction: column; 
+            align-items: center; justify-content: center; z-index: 100; padding: 20px; box-sizing: border-box;
+        }
+
+        .forfeit-btn {
+            margin-top: 15px; background: transparent; color: #666; border: 1px solid #333;
+            padding: 8px; border-radius: 8px; cursor: pointer; width: 100%; font-size: 0.7rem;
+        }
     </style>
 </head>
 <body>
 
     <div id="inventory-sidebar">
-        <div class="sidebar-title">Deck List</div>
+        <div style="font-size: 0.8rem; color: #888; margin-bottom: 10px;">DECK</div>
         <div id="inv-list"></div>
-        <div class="shard-box">
-            <div class="sidebar-title" style="color:#f1c40f">Luck Shards</div>
-            <div id="shard-display" style="font-size: 1.3rem;">✧ 0</div>
+        <div style="margin-top: 20px; border-top: 1px solid #333; padding-top: 10px;">
+            <div style="color:#f1c40f; font-size: 0.8rem;">LUCK SHARDS: <span id="shard-display">✧ 0</span></div>
         </div>
+        <button class="forfeit-btn" onclick="confirmForfeit()">FORFEIT RUN</button>
     </div>
 
     <div id="game-container">
         <div id="shop-overlay" class="overlay">
             <h2 style="color: #f1c40f;">SHOP</h2>
-            <div id="shop-options" class="shop-items"></div>
-            <button onclick="rerollShop()" style="padding:10px 20px; background:#f1c40f; border:none; border-radius:8px; cursor:pointer; font-weight:bold;">REROLL (1G)</button>
+            <div id="shop-options" style="display:flex; gap:10px; flex-wrap:wrap; justify-content:center;"></div>
+            <button onclick="rerollShop()" style="margin-top:20px; padding:10px 20px; background:#f1c40f; border:none; border-radius:8px;">REROLL (1G)</button>
         </div>
 
-        <div id="rent-overlay" class="overlay" style="background: rgba(10, 20, 50, 0.98);">
+        <div id="rent-overlay" class="overlay">
             <h2 style="color: #3498db;">RENT DUE</h2>
-            <p id="rent-bill-text" style="font-size: 1.2rem; margin: 20px 0;"></p>
-            <button id="pay-rent-btn" style="padding: 15px 40px; background: #2ecc71; color: white; border: none; border-radius: 12px; font-weight: bold; cursor: pointer; font-size: 1.1rem;">PAY NOW</button>
+            <p id="rent-bill-text" style="font-size: 1.2rem;"></p>
+            <button id="pay-rent-btn" style="padding: 15px 40px; background: #2ecc71; color: white; border: none; border-radius: 12px; font-weight: bold;">PAY NOW</button>
         </div>
 
         <div id="game-over-overlay" class="overlay">
-            <h1 style="color: #e74c3c;">RUN ENDED</h1>
-            <p id="shard-earned-msg" style="color: #f1c40f; margin-bottom: 20px;"></p>
-            <div style="background: #222; padding: 15px; border-radius: 10px; width: 100%; margin-bottom: 20px;">
-                <div style="font-size: 0.8rem; color: #888; margin-bottom: 10px;">META UPGRADES</div>
-                <div style="display:flex; justify-content: space-between; align-items:center; margin-bottom: 10px;">
-                    <span style="font-size:0.8rem">Starter Fund (+5G)</span>
-                    <button onclick="buyMeta('starterGold', 5)" class="buy-meta-btn" style="padding:5px 10px; background:#f1c40f; border:none; border-radius:5px; font-weight:bold; cursor:pointer;">✧ 5</button>
-                </div>
-            </div>
-            <button onclick="resetRun()" style="padding: 12px 40px; background: white; color: black; border: none; border-radius: 50px; font-weight: bold; cursor: pointer;">NEW RUN</button>
+            <h1 id="death-title">RUN ENDED</h1>
+            <p id="shard-earned-msg" style="color: #f1c40f;"></p>
+            <button onclick="resetRun()" style="padding: 15px 40px; background: white; color: black; border: none; border-radius: 50px; font-weight: bold;">START NEW RUN</button>
         </div>
 
-        <div id="win-msg"></div>
+        <div id="win-msg" style="height:30px; font-weight:bold; color:#2ecc71;"></div>
 
         <div class="stats-bar">
-            <div><span style="font-size:0.8rem; color:#888;">GOLD:</span><br><span id="gold-display" class="gold-total">15</span></div>
-            <div class="counters">
-                SHOP IN: <span id="shop-counter" style="color:#f1c40f">5</span><br>
-                RENT IN: <span id="rent-counter" style="color:#e74c3c">10</span>
-            </div>
+            <div><small style="color:#888;">GOLD</small><br><span id="gold-display" class="gold-total">0</span></div>
+            <div style="text-align:right;"><small style="color:#888;">RENT IN</small><br><span id="rent-counter" style="color:#e74c3c; font-weight:bold;">0</span></div>
         </div>
 
         <div class="safe-container">
             <button class="safe-btn" onclick="adjustSafe(-1)">−</button>
-            <div class="safe-info">
-                <div style="font-size: 0.6rem; color: #aaa; text-transform: uppercase; letter-spacing: 1px;">Rent Safe</div>
-                <div class="safe-amount">🔒 <span id="safe-display">0</span>G</div>
+            <div style="text-align:center">
+                <small style="color:#aaa; font-size:0.6rem;">SAFE</small><br>
+                <span class="safe-amount" id="safe-display">0G</span>
             </div>
             <button class="safe-btn" onclick="adjustSafe(1)">+</button>
         </div>
@@ -122,21 +123,13 @@
             <div class="reel" id="reel-2"><div class="symbols-container"></div></div>
         </div>
 
-        <button id="spin-btn" onclick="spin()">Spin (1 Gold)</button>
-
-        <div class="paytable">
-            <div class="pay-row"><span>3x 7️⃣ (Jackpot)</span><span class="payout-val">+500 Gold</span></div>
-            <div class="pay-row"><span>3x Matching</span><span class="payout-val">+15 Gold</span></div>
-            <div class="pay-row"><span>2x Matching</span><span class="payout-val">+2 Gold</span></div>
-            <div class="pay-row"><span>💀 Penalty</span><span class="payout-val" style="color:#e74c3c;">-2 Gold / ea</span></div>
-        </div>
+        <button id="spin-btn" onclick="spin()">SPIN (1G)</button>
     </div>
 
     <script>
-        let metaState = JSON.parse(localStorage.getItem('cloverPit_META')) || { shards: 0, starterGold: 0 };
-        
+        let meta = JSON.parse(localStorage.getItem('cloverPit_META')) || { shards: 0, starterLvl: 0 };
         const INITIAL_STATE = () => ({
-            gold: 15 + metaState.starterGold,
+            gold: 15 + (meta.starterLvl * 5),
             safeGold: 0,
             spinsUntilShop: 5,
             spinsUntilRent: 10,
@@ -146,28 +139,35 @@
             playerDeck: ['🍀', '🍎', '🍒', '🪙', '💀', '💀']
         });
 
-        let gameState = {};
-        const symbolHeight = 100;
+        let game = {};
+
+        function vibrate(type) {
+            if (navigator.vibrate) {
+                if (type === 'win') navigator.vibrate([50, 30, 50]);
+                if (type === 'loss') navigator.vibrate(100);
+            }
+        }
 
         function save() {
-            localStorage.setItem('cloverPit_V8', JSON.stringify(gameState));
-            localStorage.setItem('cloverPit_META', JSON.stringify(metaState));
+            localStorage.setItem('cloverPit_V10', JSON.stringify(game));
+            localStorage.setItem('cloverPit_META', JSON.stringify(meta));
         }
 
         function load() {
-            const saved = localStorage.getItem('cloverPit_V8');
-            gameState = saved ? JSON.parse(saved) : INITIAL_STATE();
+            const saved = localStorage.getItem('cloverPit_V10');
+            game = saved ? JSON.parse(saved) : INITIAL_STATE();
             updateUI();
             fillReels();
+            checkBankruptcy(); // Safety check on load
         }
 
         function fillReels() {
             document.querySelectorAll('.symbols-container').forEach((container, i) => {
-                container.innerHTML = `<div class="symbol">${gameState.lastResult[i]}</div>`;
-                for (let j = 0; j < 60; j++) {
+                container.innerHTML = `<div class="symbol">${game.lastResult[i]}</div>`;
+                for (let j = 0; j < 40; j++) {
                     const s = document.createElement('div');
                     s.className = 'symbol';
-                    s.textContent = gameState.playerDeck[Math.floor(Math.random() * gameState.playerDeck.length)];
+                    s.textContent = game.playerDeck[Math.floor(Math.random() * game.playerDeck.length)];
                     container.appendChild(s);
                 }
                 container.style.transition = 'none';
@@ -176,160 +176,159 @@
         }
 
         async function spin() {
-            if (gameState.gold <= 0 || document.getElementById('spin-btn').disabled) return;
-            
+            if (game.gold <= 0) return;
             document.getElementById('spin-btn').disabled = true;
-            document.getElementById('win-msg').innerHTML = '';
             
-            gameState.gold--;
-            gameState.spinsUntilShop--;
-            gameState.spinsUntilRent--;
+            game.gold--;
+            game.spinsUntilShop--;
+            game.spinsUntilRent--;
             updateUI();
 
-            const results = await Promise.all([animate(0), animate(1), animate(2)]);
-            gameState.lastResult = results;
-            checkResult(results);
-        }
-
-        function animate(i) {
-            return new Promise(resolve => {
-                const el = document.querySelector(`#reel-${i} .symbols-container`);
-                const target = Math.floor(Math.random() * 20) + 30;
-                el.style.transition = `transform ${1.5 + (i * 0.3)}s cubic-bezier(0.1, 0, 0.1, 1)`;
-                el.style.transform = `translateY(-${target * symbolHeight}px)`;
-                setTimeout(() => resolve(el.children[target].textContent), (1.5 + (i * 0.3)) * 1000);
-            });
-        }
-
-        function checkResult(res) {
+            const res = await Promise.all([animate(0), animate(1), animate(2)]);
+            game.lastResult = res;
+            
+            // Calculate win
             let win = 0;
             const skulls = res.filter(s => s === '💀').length;
             win -= (skulls * 2);
-
-            if (res[0] === '7️⃣' && res[1] === '7️⃣' && res[2] === '7️⃣') win += 500;
-            else if (res[0] === res[1] && res[1] === res[2] && res[0] !== '💀') win += 15;
+            if (res[0] === res[1] && res[1] === res[2] && res[0] !== '💀') win += 15;
             else if (res[0] === res[1] || res[1] === res[2] || res[0] === res[2]) {
                 const match = (res[0] === res[1] || res[0] === res[2]) ? res[0] : res[1];
                 if (match !== '💀') win += 2;
             }
 
-            gameState.gold += win;
-            if (win > 0) gameState.totalGained += win;
-            
+            game.gold += win;
+            if (win > 0) { game.totalGained += win; vibrate('win'); }
+            if (win < 0) vibrate('loss');
+
             const msg = document.getElementById('win-msg');
-            if (win > 0) { msg.innerHTML = `WIN +${win}G!`; msg.className = 'pop-win'; }
-            else if (win < 0) { msg.innerHTML = `LOSS ${win}G!`; msg.className = 'shake-loss'; }
+            msg.innerHTML = win !== 0 ? (win > 0 ? `+${win}G` : `${win}G`) : "";
+            msg.style.color = win > 0 ? "#2ecc71" : "#e74c3c";
 
             updateUI();
             save();
 
-            if (gameState.gold < 0) { endRun("Bankrupt!"); }
-            else if (gameState.spinsUntilRent <= 0) { showRent(); }
-            else if (gameState.spinsUntilShop <= 0) { showShop(); }
-            else { document.getElementById('spin-btn').disabled = false; }
+            // Sequence Logic
+            if (game.gold < 0) {
+                endRun("Bankrupt!");
+            } else if (game.spinsUntilRent <= 0) {
+                setTimeout(showRent, 500);
+            } else if (game.spinsUntilShop <= 0) {
+                setTimeout(showShop, 500);
+            } else {
+                if (game.gold === 0) {
+                    endRun("Out of Gold!");
+                } else {
+                    document.getElementById('spin-btn').disabled = false;
+                }
+            }
+        }
+
+        function animate(i) {
+            return new Promise(resolve => {
+                const el = document.querySelector(`#reel-${i} .symbols-container`);
+                const target = 30;
+                el.style.transition = `transform ${1 + (i * 0.2)}s cubic-bezier(0.1, 0, 0.1, 1)`;
+                el.style.transform = `translateY(-${target * 100}px)`;
+                setTimeout(() => resolve(el.children[target].textContent), (1 + (i * 0.2)) * 1000);
+            });
         }
 
         function showRent() {
-            const over = document.getElementById('rent-overlay');
-            document.getElementById('rent-bill-text').textContent = `Amount Due: ${gameState.rentDue}G`;
+            document.getElementById('rent-bill-text').textContent = `Pay ${game.rentDue}G or Game Over`;
+            document.getElementById('rent-overlay').style.display = 'flex';
             document.getElementById('pay-rent-btn').onclick = () => {
-                const total = gameState.gold + gameState.safeGold;
-                if (total >= gameState.rentDue) {
-                    let bill = gameState.rentDue;
-                    const fromSafe = Math.min(gameState.safeGold, bill);
-                    gameState.safeGold -= fromSafe;
-                    gameState.gold -= (bill - fromSafe);
-                    gameState.rentDue = Math.floor(gameState.rentDue * 1.6) + 5;
-                    gameState.spinsUntilRent = 10;
-                    over.style.display = 'none';
-                    if (gameState.spinsUntilShop <= 0) showShop();
-                    else document.getElementById('spin-btn').disabled = false;
-                    updateUI(); save();
-                } else { endRun("Couldn't afford rent!"); }
+                if ((game.gold + game.safeGold) >= game.rentDue) {
+                    let bill = game.rentDue;
+                    const fromSafe = Math.min(game.safeGold, bill);
+                    game.safeGold -= fromSafe;
+                    game.gold -= (bill - fromSafe);
+                    game.rentDue = Math.floor(game.rentDue * 1.5) + 5;
+                    game.spinsUntilRent = 10;
+                    document.getElementById('rent-overlay').style.display = 'none';
+                    if (game.spinsUntilShop <= 0) showShop();
+                    else checkBankruptcy();
+                } else {
+                    endRun("Can't pay rent!");
+                }
             };
-            over.style.display = 'flex';
         }
 
         function showShop() {
-            const over = document.getElementById('shop-overlay');
             const box = document.getElementById('shop-options');
             box.innerHTML = '';
-            const pool = [['💎', 10], ['7️⃣', 5], ['🌟', 15], ['🪙', 30], ['🍀', 40]];
+            const pool = ['💎', '7️⃣', '🌟', '🪙', '🍀', '🍎'];
             for(let i=0; i<3; i++) {
-                const s = pool[Math.floor(Math.random()*pool.length)][0];
-                const btn = document.createElement('div');
-                btn.className = 'shop-item';
-                btn.innerHTML = `<span>${s}</span><br><small>ADD</small>`;
-                btn.onclick = () => { gameState.playerDeck.push(s); closeShop(); };
+                const s = pool[Math.floor(Math.random()*pool.length)];
+                const btn = document.createElement('button');
+                btn.style.padding = '15px'; btn.style.borderRadius = '10px'; btn.innerHTML = s;
+                btn.onclick = () => { game.playerDeck.push(s); closeShop(); };
                 box.appendChild(btn);
             }
-            if (gameState.playerDeck.includes('💀')) {
-                const p = document.createElement('div');
-                p.className = 'shop-item remove';
-                p.innerHTML = `<span>💀</span><br><small>PURGE</small>`;
-                p.onclick = () => { gameState.playerDeck.splice(gameState.playerDeck.indexOf('💀'), 1); closeShop(); };
-                box.appendChild(p);
-            }
-            over.style.display = 'flex';
-        }
-
-        function rerollShop() {
-            if (gameState.gold >= 1) { gameState.gold--; updateUI(); showShop(); }
+            document.getElementById('shop-overlay').style.display = 'flex';
         }
 
         function closeShop() {
-            gameState.spinsUntilShop = 5;
+            game.spinsUntilShop = 5;
             document.getElementById('shop-overlay').style.display = 'none';
-            document.getElementById('spin-btn').disabled = false;
-            updateUI(); save(); fillReels();
+            checkBankruptcy();
+            fillReels();
         }
 
-        function adjustSafe(n) {
-            if (n > 0 && gameState.gold >= 1) { gameState.gold--; gameState.safeGold++; }
-            else if (n < 0 && gameState.safeGold >= 1) { gameState.gold++; gameState.safeGold--; }
-            updateUI(); save();
+        function checkBankruptcy() {
+            if (game.gold <= 0 && game.safeGold <= 0) {
+                endRun("No gold left!");
+            } else if (game.gold <= 0 && game.safeGold > 0) {
+                // If they have safe gold but 0 wallet, they aren't dead, but need to move gold
+                document.getElementById('win-msg').innerHTML = "Move gold from safe!";
+                document.getElementById('win-msg').style.color = "#3498db";
+                document.getElementById('spin-btn').disabled = true;
+            } else {
+                document.getElementById('spin-btn').disabled = false;
+            }
+            updateUI();
+            save();
         }
 
         function endRun(reason) {
-            const shards = Math.floor(gameState.totalGained / 10);
-            metaState.shards += shards;
-            document.getElementById('shard-earned-msg').textContent = `Total Profit: ${gameState.totalGained}G | +✧${shards} Shards`;
+            const earned = Math.floor(game.totalGained / 10);
+            meta.shards += earned;
+            document.getElementById('death-title').textContent = reason;
+            document.getElementById('shard-earned-msg').textContent = `✧${earned} Shards Earned`;
             document.getElementById('game-over-overlay').style.display = 'flex';
-            save(); updateUI();
+            save();
         }
 
-        function buyMeta(type, cost) {
-            if (metaState.shards >= cost) {
-                metaState.shards -= cost;
-                if (type === 'starterGold') metaState.starterGold += 5;
-                updateUI(); save();
-            }
+        function confirmForfeit() {
+            if (confirm("End run now? You will keep shards earned so far.")) endRun("Run Forfeited");
         }
 
         function resetRun() {
-            gameState = INITIAL_STATE();
+            game = INITIAL_STATE();
             document.getElementById('game-over-overlay').style.display = 'none';
+            fillReels();
+            updateUI();
+            save();
             document.getElementById('spin-btn').disabled = false;
-            updateUI(); fillReels(); save();
+        }
+
+        function adjustSafe(n) {
+            if (n > 0 && game.gold >= 1) { game.gold--; game.safeGold++; }
+            else if (n < 0 && game.safeGold >= 1) { game.gold++; game.safeGold--; }
+            checkBankruptcy();
         }
 
         function updateUI() {
-            document.getElementById('gold-display').textContent = gameState.gold;
-            document.getElementById('safe-display').textContent = gameState.safeGold;
-            document.getElementById('shard-display').textContent = `✧ ${metaState.shards}`;
-            document.getElementById('shop-counter').textContent = gameState.spinsUntilShop;
-            document.getElementById('rent-counter').textContent = gameState.spinsUntilRent;
-            
+            document.getElementById('gold-display').textContent = game.gold + "G";
+            document.getElementById('safe-display').textContent = game.safeGold + "G";
+            document.getElementById('shard-display').textContent = `✧ ${meta.shards}`;
+            document.getElementById('rent-counter').textContent = game.spinsUntilRent;
             const inv = document.getElementById('inv-list');
             inv.innerHTML = '';
             const counts = {};
-            gameState.playerDeck.forEach(x => counts[x] = (counts[x] || 0) + 1);
-            Object.keys(counts).sort().forEach(s => {
-                inv.innerHTML += `<div class="inventory-item">${s} <span>x${counts[s]}</span></div>`;
-            });
-            
-            document.querySelectorAll('.buy-meta-btn').forEach(b => {
-                b.disabled = metaState.shards < 5;
+            game.playerDeck.forEach(x => counts[x] = (counts[x] || 0) + 1);
+            Object.keys(counts).forEach(s => {
+                inv.innerHTML += `<div style="display:flex; justify-content:space-between; margin-bottom:4px; font-size:0.9rem;"><span>${s}</span><span>x${counts[s]}</span></div>`;
             });
         }
 
