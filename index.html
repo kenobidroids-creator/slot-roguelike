@@ -3,27 +3,24 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Slot Roguelike Game</title>
     <link rel="stylesheet" href="style.css">
+    <title>Slot Roguelike</title>
 </head>
 <body>
-    <header>
-        <h1>Welcome to Slot Roguelike</h1>
-    </header>
-    <main>
-        <div id="game-elements">
-            <!-- Add game elements here -->
-            <div id="slot-machine">
-                <div class="reel">🎰</div>
-                <div class="reel">🎰</div>
-                <div class="reel">🎰</div>
-            </div>
-            <button id="spin-button">Spin</button>
+    <div id="inventory-sidebar"></div>
+    <div id="game-container">
+        <div id="slot-machine">
+            <div class="reel"></div>
+            <div class="reel"></div>
+            <div class="reel"></div>
         </div>
-    </main>
-    <footer>
-        <p>&copy; 2026 Slot Roguelike. All rights reserved.</p>
-    </footer>
+        <button id="spin-button">Spin</button>
+    </div>
+    <div id="shop-overlay"></div>
+    <div id="rent-overlay"></div>
+    <div id="game-over-overlay"></div>
+    <div id="stats-bar"></div>
+    <div id="safe-container"></div>
     <script src="script.js"></script>
 </body>
 </html>
