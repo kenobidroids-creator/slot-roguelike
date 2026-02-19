@@ -2,25 +2,99 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" href="style.css">
-    <title>Slot Roguelike</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Clover Pit - Roguelite Slots</title>
+    <link rel="stylesheet" href="style.css?v=1.2">
 </head>
 <body>
-    <div id="inventory-sidebar"></div>
-    <div id="game-container">
-        <div id="slot-machine">
-            <div class="reel"></div>
-            <div class="reel"></div>
-            <div class="reel"></div>
-        </div>
-        <button id="spin-button">Spin</button>
+
+    <div class="game-wrapper">
+        <aside id="inventory-sidebar">
+            <div class="sidebar-label">Deck List</div>
+            <div id="inv-list"></div>
+            <div class="shard-box">
+                <div class="sidebar-label" style="color:#f1c40f;">Luck Shards</div>
+                <div id="shard-display">✧ 0</div>
+            </div>
+            <button onclick="confirmForfeit()" class="forfeit-btn">FORFEIT RUN</button>
+        </aside>
+
+        <main id="game-container">
+            <div id="shop-overlay" class="overlay">
+                <h2 style="color:#f1c40f">SHOP</h2>
+                <div id="shop-options" class="overlay-options"></div>
+                <button onclick="rerollShop()" class="action-btn">REROLL (1G)</button>
+            </div>
+
+            <div id="rent-overlay" class="overlay">
+                <h2 style="color: #3498db;">RENT DUE</h2>
+                <p id="rent-bill-text" style="font-size: 1.2rem; margin: 20px 0;"></p>
+                <button id="pay-rent-btn" class="pay-btn">PAY NOW</button>
+            </div>
+
+            <div id="game-over-overlay" class="overlay">
+                <h2 id="death-title" style="color:#e74c3c">RUN ENDED</h2>
+                <div class="meta-card">
+                    <div class="card-label">Run Performance</div>
+                    <div class="stat-line"><span>Best Spin:</span><span id="best-spin" style="color:#2ecc71">0G</span></div>
+                    <div class="stat-line"><span>Total Earned:</span><span id="run-total">0G</span></div>
+                </div>
+                <div class="meta-card">
+                    <div class="card-label">Permanent Upgrades</div>
+                    <div class="upgrade-row">
+                        <span>Starter Fund <small id="lvl-fund"></small></span>
+                        <button id="buy-fund" onclick="buyMeta('starterLvl', 5)" class="buy-btn"></button>
+                    </div>
+                    <div class="upgrade-row">
+                        <span>Tax Evasion <small id="lvl-tax"></small></span>
+                        <button id="buy-tax" onclick="buyMeta('taxLvl', 10)" class="buy-btn"></button>
+                    </div>
+                </div>
+                <button onclick="resetRun()" class="reset-btn">NEW RUN</button>
+            </div>
+
+            <div id="win-msg"></div>
+
+            <div class="stats-bar">
+                <div class="stat-group">
+                    <div class="stat-label">GOLD</div>
+                    <div id="gold-display" class="gold-total">15</div>
+                </div>
+                <div class="stat-group" style="text-align: right;">
+                    <div class="stat-label">NEXT MILESTONE</div>
+                    <div style="font-size: 0.75rem; color: #888;">
+                        SHOP: <span id="shop-counter" style="color:#f1c40f">5</span> | 
+                        RENT: <span id="rent-counter" style="color:#e74c3c">10</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="safe-container">
+                <button class="safe-btn" onclick="adjustSafe(-1)">−</button>
+                <div class="safe-info">
+                    <div class="safe-label">RENT SAFE</div>
+                    <div class="safe-val">🔒 <span id="safe-display">0</span>G</div>
+                </div>
+                <button class="safe-btn" onclick="adjustSafe(1)">+</button>
+            </div>
+
+            <div class="slot-machine">
+                <div class="reel" id="reel-0"><div class="symbols-container"></div></div>
+                <div class="reel" id="reel-1"><div class="symbols-container"></div></div>
+                <div class="reel" id="reel-2"><div class="symbols-container"></div></div>
+            </div>
+
+            <button id="spin-btn" onclick="spin()">Spin (1 Gold)</button>
+
+            <div class="paytable">
+                <div class="pay-row"><span>3x 7️⃣ (Jackpot)</span><span class="payout-val">+500G</span></div>
+                <div class="pay-row"><span>3x Matching</span><span class="payout-val">+15G</span></div>
+                <div class="pay-row"><span>2x Matching</span><span class="payout-val">+2G</span></div>
+                <div class="pay-row"><span>💀 Penalty</span><span class="payout-val" style="color:#e74c3c;">-2G / ea</span></div>
+            </div>
+        </main>
     </div>
-    <div id="shop-overlay"></div>
-    <div id="rent-overlay"></div>
-    <div id="game-over-overlay"></div>
-    <div id="stats-bar"></div>
-    <div id="safe-container"></div>
-    <script src="script.js"></script>
+
+    <script src="script.js?v=1.2"></script>
 </body>
 </html>
