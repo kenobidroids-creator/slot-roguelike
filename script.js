@@ -39,11 +39,15 @@ function load() {
 function fillReels() {
     document.querySelectorAll('.symbols-container').forEach((container, i) => {
         container.style.transition = 'none';
+        // Keep the last result at the top so the spin "starts" from where it left off
         container.innerHTML = `<div class="symbol">${game.lastResult[i]}</div>`;
+        
+        // Generate 40 fresh symbols for the reel to roll through
         for (let j = 0; j < 40; j++) {
             const s = document.createElement('div');
             s.className = 'symbol';
-            s.textContent = getRandomSymbol();
+            // This now uses the weighted randomizer to prevent symbol spam
+            s.textContent = getRandomSymbol(); 
             container.appendChild(s);
         }
         container.style.transform = 'translateY(0)';
@@ -53,6 +57,9 @@ function fillReels() {
 async function spin() {
     const spinBtn = document.getElementById('spin-btn');
     if (game.gold <= 0 || spinBtn.disabled) return;
+    
+    // SURGICAL ADD: Refresh the reels with new random symbols BEFORE the animation starts
+    fillReels(); 
     
     spinBtn.disabled = true;
     document.getElementById('win-msg').innerHTML = "";
@@ -69,7 +76,6 @@ async function spin() {
     const skulls = results.filter(s => s === '💀').length;
     win -= (skulls * 2);
 
-    // Jackpot 777
     if (results[0] === '7️⃣' && results[1] === '7️⃣' && results[2] === '7️⃣') {
         win += 500;
     } else if (results[0] === results[1] && results[1] === results[2] && results[0] !== '💀') {
