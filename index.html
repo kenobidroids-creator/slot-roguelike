@@ -1,100 +1,248 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Clover Pit - Roguelite Slots</title>
-    <link rel="stylesheet" href="style.css?v=1.2">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Neon Vault</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700;900&family=Rajdhani:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
-    <div class="game-wrapper">
-        <aside id="inventory-sidebar">
-            <div class="sidebar-label">Deck List</div>
-            <div id="inv-list"></div>
-            <div class="shard-box">
-                <div class="sidebar-label" style="color:#f1c40f;">Luck Shards</div>
-                <div id="shard-display">✧ 0</div>
-            </div>
-            <button onclick="confirmForfeit()" class="forfeit-btn">FORFEIT RUN</button>
-        </aside>
+  <!-- Toast -->
+  <div id="toast" class="toast toast-hide"></div>
 
-        <main id="game-container">
-            <div id="shop-overlay" class="overlay">
-                <h2 style="color:#f1c40f">SHOP</h2>
-                <div id="shop-options" class="overlay-options"></div>
-                <button onclick="rerollShop()" class="action-btn">REROLL (1G)</button>
-            </div>
-
-            <div id="rent-overlay" class="overlay">
-                <h2 style="color: #3498db;">RENT DUE</h2>
-                <p id="rent-bill-text" style="font-size: 1.2rem; margin: 20px 0;"></p>
-                <button id="pay-rent-btn" class="pay-btn">PAY NOW</button>
-            </div>
-
-            <div id="game-over-overlay" class="overlay">
-                <h2 id="death-title" style="color:#e74c3c">RUN ENDED</h2>
-                <div class="meta-card">
-                    <div class="card-label">Run Performance</div>
-                    <div class="stat-line"><span>Best Spin:</span><span id="best-spin" style="color:#2ecc71">0G</span></div>
-                    <div class="stat-line"><span>Total Earned:</span><span id="run-total">0G</span></div>
-                </div>
-                <div class="meta-card">
-                    <div class="card-label">Permanent Upgrades</div>
-                    <div class="upgrade-row">
-                        <span>Starter Fund <small id="lvl-fund"></small></span>
-                        <button id="buy-fund" onclick="buyMeta('starterLvl', 5)" class="buy-btn"></button>
-                    </div>
-                    <div class="upgrade-row">
-                        <span>Tax Evasion <small id="lvl-tax"></small></span>
-                        <button id="buy-tax" onclick="buyMeta('taxLvl', 10)" class="buy-btn"></button>
-                    </div>
-                </div>
-                <button onclick="resetRun()" class="reset-btn">NEW RUN</button>
-            </div>
-
-            <div id="win-msg"></div>
-
-            <div class="stats-bar">
-                <div class="stat-group">
-                    <div class="stat-label">GOLD</div>
-                    <div id="gold-display" class="gold-total">15</div>
-                </div>
-                <div class="stat-group" style="text-align: right;">
-                    <div class="stat-label">NEXT MILESTONE</div>
-                    <div style="font-size: 0.75rem; color: #888;">
-                        SHOP: <span id="shop-counter" style="color:#f1c40f">5</span> | 
-                        RENT: <span id="rent-counter" style="color:#e74c3c">10</span>
-                    </div>
-                </div>
-            </div>
-
-            <div class="safe-container">
-                <button class="safe-btn" onclick="adjustSafe(-1)">−</button>
-                <div class="safe-info">
-                    <div class="safe-label">RENT SAFE</div>
-                    <div class="safe-val">🔒 <span id="safe-display">0</span>G</div>
-                </div>
-                <button class="safe-btn" onclick="adjustSafe(1)">+</button>
-            </div>
-
-            <div class="slot-machine">
-                <div class="reel" id="reel-0"><div class="symbols-container"></div></div>
-                <div class="reel" id="reel-1"><div class="symbols-container"></div></div>
-                <div class="reel" id="reel-2"><div class="symbols-container"></div></div>
-            </div>
-
-            <button id="spin-btn" onclick="spin()">Spin (1 Gold)</button>
-
-            <div class="paytable">
-                <div class="pay-row"><span>3x 7️⃣ (Jackpot)</span><span class="payout-val">+500G</span></div>
-                <div class="pay-row"><span>3x Matching</span><span class="payout-val">+15G</span></div>
-                <div class="pay-row"><span>2x Matching</span><span class="payout-val">+2G</span></div>
-                <div class="pay-row"><span>💀 Penalty</span><span class="payout-val" style="color:#e74c3c;">-2G / ea</span></div>
-            </div>
-        </main>
+  <!-- Remove symbol modal -->
+  <div id="remove-modal" class="modal-backdrop">
+    <div class="modal-box">
+      <h3>Remove Which Symbol?</h3>
+      <p style="color:#9e9e9e;font-size:0.8rem;margin-bottom:12px">
+        Costs <strong style="color:#f5c518">3G</strong> — removes one copy from deck
+      </p>
+      <div id="remove-list" class="remove-list"></div>
+      <button class="btn-secondary" onclick="closeRemoveModal()" style="margin-top:14px;width:100%">Cancel</button>
     </div>
+  </div>
 
-    <script src="script.js?v=1.2"></script>
+  <div class="layout">
+
+    <!-- ── SIDEBAR ── -->
+    <aside class="sidebar">
+      <div class="sidebar-header">
+        <div>
+          <span class="game-title">NEON VAULT</span>
+          <span class="game-subtitle">Roguelite Slots</span>
+        </div>
+        <span id="shard-count" class="shard-badge">✧ 0</span>
+      </div>
+
+      <div class="tab-bar">
+        <button class="tab-btn active" data-tab="deck"  onclick="switchTab('deck')">DECK</button>
+        <button class="tab-btn"        data-tab="mods"  onclick="switchTab('mods')">MODS</button>
+        <button class="tab-btn"        data-tab="pay"   onclick="switchTab('pay')">PAYS</button>
+      </div>
+
+      <div id="tab-deck" class="sidebar-tab-content active">
+        <div class="section-label">
+          DECK
+          <span style="float:right;color:#666;font-size:0.68rem" id="mod-slot-count">0/5 MODS</span>
+        </div>
+        <div id="deck-list"></div>
+      </div>
+
+      <div id="tab-mods" class="sidebar-tab-content">
+        <div class="section-label">ACTIVE MODIFIERS</div>
+        <div id="modifier-list">
+          <div class="empty-mods">No modifiers yet</div>
+        </div>
+      </div>
+
+      <div id="tab-pay" class="sidebar-tab-content">
+        <div class="section-label">SYMBOL VALUES</div>
+        <div id="paytable-symbols"></div>
+        <div class="section-label" style="margin-top:12px">SPIN COMBOS</div>
+        <div id="paytable-combos"></div>
+        <div class="section-label" style="margin-top:12px">PAYLINES (5 active)</div>
+        <div id="paytable-paylines"></div>
+      </div>
+
+      <div class="sidebar-footer">
+        <button class="btn-forfeit" onclick="confirmForfeit()">FORFEIT RUN</button>
+      </div>
+    </aside>
+
+    <!-- ── MAIN GAME AREA ── -->
+    <main class="game-area">
+
+      <!-- HUD -->
+      <div class="hud">
+        <div class="hud-left">
+          <div class="hud-stage" id="hud-stage">STAGE 1</div>
+          <div class="hud-round-name" id="hud-round-name">Warm Up</div>
+        </div>
+        <div class="hud-center">
+          <div class="hud-stat-label">SPINS</div>
+          <div class="hud-spins" id="hud-spins">9</div>
+        </div>
+        <div class="hud-right">
+          <div class="hud-stat-label">GOLD</div>
+          <div class="hud-gold" id="hud-gold">6</div>
+        </div>
+      </div>
+
+      <!-- Progress bar -->
+      <div class="progress-wrap">
+        <div class="progress-bar">
+          <div class="progress-fill" id="progress-fill"></div>
+        </div>
+        <div class="progress-label" id="progress-label">0 / 300</div>
+      </div>
+
+      <!-- ── SLOT MACHINE (5 reels × 3 rows) ── -->
+      <div class="slot-machine">
+        <div class="reel-frame">
+          <!-- Payline indicators (left) -->
+          <div class="payline-indicators">
+            <div class="pl-dot pl-1" title="Top row"></div>
+            <div class="pl-dot pl-2" title="Middle row"></div>
+            <div class="pl-dot pl-3" title="Bottom row"></div>
+            <div class="pl-dot pl-4" title="V-Shape"></div>
+            <div class="pl-dot pl-5" title="Λ-Shape"></div>
+          </div>
+
+          <div class="reels-wrap" style="position:relative">
+            <div class="reel" id="reel-0"><div class="symbols-container"></div></div>
+            <div class="reel" id="reel-1"><div class="symbols-container"></div></div>
+            <div class="reel" id="reel-2"><div class="symbols-container"></div></div>
+            <div class="reel" id="reel-3"><div class="symbols-container"></div></div>
+            <div class="reel" id="reel-4"><div class="symbols-container"></div></div>
+            <!-- SVG payline overlay: drawn by ui.js after each spin -->
+            <svg id="payline-svg" style="position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:none;overflow:visible;z-index:10"></svg>
+          </div>
+
+          <!-- Payline indicators (right) -->
+          <div class="payline-indicators">
+            <div class="pl-dot pl-1"></div>
+            <div class="pl-dot pl-2"></div>
+            <div class="pl-dot pl-3"></div>
+            <div class="pl-dot pl-4"></div>
+            <div class="pl-dot pl-5"></div>
+          </div>
+
+          <!-- Row highlight overlays -->
+          <div class="reel-fade top"></div>
+          <div class="reel-fade bottom"></div>
+        </div>
+      </div>
+
+      <!-- Result card -->
+      <div id="result-card" class="result-card hidden"></div>
+
+      <!-- Spin button -->
+      <button id="spin-btn" class="spin-btn" onclick="spin()">SPIN</button>
+
+    </main>
+  </div>
+
+  <!-- ════════════════════════════════════════
+       OVERLAYS
+  ════════════════════════════════════════ -->
+
+  <!-- Pre-round -->
+  <div id="phase-pre-round" class="overlay">
+    <div class="overlay-card">
+      <div class="overlay-eyebrow" id="pre-stage-label">STAGE 1 · ROUND 1/3</div>
+      <div id="pre-boss-badge" class="boss-badge" style="display:none">⚠ FINAL ROUND</div>
+      <h2 id="pre-round-name" class="overlay-title"></h2>
+      <div class="blind-stats">
+        <div class="blind-stat">
+          <span class="blind-stat-label">TARGET SCORE</span>
+          <span id="pre-target" class="blind-stat-value gold">300</span>
+        </div>
+        <div class="blind-stat">
+          <span class="blind-stat-label">SPINS</span>
+          <span id="pre-spins"  class="blind-stat-value">9</span>
+        </div>
+        <div class="blind-stat">
+          <span class="blind-stat-label">GOLD REWARD</span>
+          <span id="pre-reward" class="blind-stat-value green">+4G</span>
+        </div>
+      </div>
+      <button class="btn-primary" onclick="startRound()">PLAY ROUND</button>
+    </div>
+  </div>
+
+  <!-- Shop -->
+  <div id="phase-shop" class="overlay">
+    <div class="overlay-card shop-card-wrap">
+      <div class="overlay-eyebrow">ROUND COMPLETE</div>
+      <div class="shop-header-row">
+        <h2 class="overlay-title gold" style="margin:0">SHOP</h2>
+        <div class="shop-gold-badge">
+          <span style="color:#888;font-size:0.7rem">YOUR GOLD</span>
+          <span id="shop-gold-display" class="shop-gold-val">6G</span>
+        </div>
+      </div>
+      <div id="shop-items" class="shop-grid"></div>
+      <div class="shop-actions">
+        <button id="shop-reroll-btn" class="btn-secondary" onclick="handleShopReroll()">
+          REROLL (${CONFIG?.REROLL_COST ?? 1}G)
+        </button>
+        <button class="btn-skip" onclick="handleShopSkip()">SKIP +2G</button>
+        <button class="btn-continue" onclick="handleShopContinue()">CONTINUE →</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Game over -->
+  <div id="phase-game-over" class="overlay">
+    <div class="overlay-card">
+      <div class="overlay-eyebrow">RUN ENDED</div>
+      <h2 id="go-reason" class="overlay-title red">Game Over</h2>
+      <div class="go-stats">
+        <div class="go-stat"><span>Stage Reached</span><span id="go-stage" class="gold">Stage 1</span></div>
+        <div class="go-stat"><span>Best Spin</span>    <span id="go-best"  class="gold">0</span></div>
+        <div class="go-stat"><span>Total Score</span>  <span id="go-total" class="gold">0</span></div>
+        <div class="go-stat shards-row">
+          <span>Shards Earned</span>
+          <span id="go-shards-earned" class="cyan">+0 ✧</span>
+        </div>
+        <div class="go-stat">
+          <span>Total Shards</span>
+          <span id="go-shards" class="cyan">✧ 0</span>
+        </div>
+      </div>
+      <div class="section-label" style="margin:16px 0 8px">PERMANENT UPGRADES</div>
+      <div id="meta-upgrades"></div>
+      <button class="btn-primary" onclick="resetRun()" style="margin-top:18px">NEW RUN</button>
+    </div>
+  </div>
+
+  <!-- Screen flash effect -->
+  <div id="screen-flash"></div>
+
+  <!-- Jackpot celebration overlay -->
+  <div id="jackpot-overlay">
+    <canvas id="jackpot-canvas"></canvas>
+    <div class="jackpot-content">
+      <div class="jackpot-glow-ring"></div>
+      <div class="jackpot-emoji">🎰</div>
+      <div class="jackpot-title">JACKPOT!</div>
+      <div id="jackpot-score" class="jackpot-score">+0</div>
+      <div class="jackpot-sub">TAP TO CONTINUE</div>
+    </div>
+  </div>
+
+  <script src="js/config.js"></script>
+  <script src="js/engine.js"></script>
+  <script src="js/shop.js"></script>
+  <script src="js/ui.js"></script>
+  <script src="js/main.js"></script>
+  <script>
+    // Fix reroll button text after CONFIG loads
+    const rrBtn = document.getElementById('shop-reroll-btn');
+    if (rrBtn) rrBtn.textContent = `REROLL (${CONFIG.REROLL_COST}G)`;
+  </script>
 </body>
 </html>
