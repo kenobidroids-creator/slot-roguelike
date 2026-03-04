@@ -12,7 +12,7 @@ var Shop = (() => {
       symbol: sym,
       name: CONFIG.SYMBOLS[sym].name,
       cost: CONFIG.SYMBOL_COSTS[sym],
-      desc: `Add ${sym} to deck  (+${CONFIG.SYMBOLS[sym].chips} chips base)`,
+      desc: `Add ${sym} to your reel pool  (+${CONFIG.SYMBOLS[sym].chips} chips base)`,
     }));
 
     const available = CONFIG.MODIFIERS.filter(m => !currentModIds.includes(m.id));
@@ -30,7 +30,7 @@ var Shop = (() => {
       type: 'remove',
       cost: CONFIG.REMOVE_SYMBOL_COST,
       name: 'REMOVE CARD',
-      desc: 'Remove one copy of any symbol from your deck',
+      desc: 'Remove one copy of any symbol from your reel pool',
       emoji: '🗑️',
     };
 

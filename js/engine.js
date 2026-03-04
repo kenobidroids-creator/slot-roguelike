@@ -19,9 +19,6 @@ var Engine = (() => {
     return deck[0];
   }
 
-  /**
-   * Draw a full grid: grid[reel][row], 5 reels × 3 rows.
-   */
   function drawGrid(deck) {
     return Array.from({ length: CONFIG.NUM_REELS }, () =>
       Array.from({ length: CONFIG.VISIBLE_ROWS }, () => getWeightedSymbol(deck))
@@ -41,17 +38,25 @@ var Engine = (() => {
   }
 
   // ── Single payline evaluation ─────────────────────────────
+  //
+  // Combo hierarchy (left-to-right run required for all except SCATTER):
+  //   JACKPOT    — 5× 💎 or 5× 7️⃣ from leftmost reel
+  //   FIVE_KIND  — 5× same symbol from leftmost reel
+  //   FOUR_KIND  — 4× same symbol starting from leftmost reel
+  //   THREE_KIND — 3× same symbol starting from leftmost reel
+  //   MATCH      — 2× same symbol starting from leftmost reel
+  //   SCATTER    — 3+ same symbol anywhere on line (no left-run of 2+)
+  //   NO_WIN     — nothing
+  //
+  // Returns: { comboKey, baseChips, baseMult, runLen, winSymbol, rawSyms }
+  //   runLen   = how many reels from the left are part of the win (for highlight)
+  //   winSymbol = which symbol matched (for highlight)
 
-  /**
-   * Given 5 symbols on a line, return { comboKey, baseChips, baseMult }.
-   * baseChips = symbol chip sum + combo bonus chips - skull penalties
-   * baseMult  = combo mult
-   */
   function evaluatePayline(rawSyms, modIds) {
     const syms = applyWilds(rawSyms, modIds);
     const w    = CONFIG.SYMBOLS;
 
-    // Count skulls & raw chip sum
+    // Chip sum & skull count from RAW symbols (pre-wild)
     let skullCount = 0;
     let rawChips   = 0;
     rawSyms.forEach(s => {
@@ -59,23 +64,37 @@ var Engine = (() => {
       else rawChips += (w[s]?.chips ?? 0);
     });
 
-    // Run-length from left (ignoring skulls in the run detection)
-    const noSkulls = syms.filter(s => !w[s]?.penalty);
-    const leftSym  = syms.find(s => !w[s]?.penalty);
-    let runLen = 0;
+    // ── Left-run detection ────────────────────────────────
+    // The leftmost non-skull symbol determines what a "run" matches.
+    // A skull at any position BREAKS the run.
+    // syms[0] must be non-skull to start a run.
+    let runLen   = 0;
+    let winSymbol = null;
+
+    const leftSym = w[syms[0]]?.penalty ? null : syms[0];
     if (leftSym) {
       for (const s of syms) {
-        if (s === leftSym) runLen++;
-        else break;
+        if (s === leftSym) { runLen++; }
+        else { break; }
+      }
+      winSymbol = leftSym;
+    }
+
+    // ── Scatter: 3+ matching anywhere, only if no left-run ──
+    // (Prevents scatter from firing constantly on low-run spins)
+    let scatterSym   = null;
+    let scatterCount = 0;
+    if (runLen < 2) {
+      const counts = {};
+      syms.forEach(s => { if (!w[s]?.penalty) counts[s] = (counts[s] || 0) + 1; });
+      const entries = Object.entries(counts).filter(([,c]) => c >= 3);
+      if (entries.length) {
+        entries.sort((a, b) => b[1] - a[1]);
+        [scatterSym, scatterCount] = entries[0];
       }
     }
 
-    // Scatter: any 2+ matching non-skull not necessarily from left
-    const counts = {};
-    syms.forEach(s => { if (!w[s]?.penalty) counts[s] = (counts[s] || 0) + 1; });
-    const maxCount = noSkulls.length ? Math.max(...Object.values(counts)) : 0;
-
-    // Pick combo key
+    // ── Pick combo ────────────────────────────────────────
     let comboKey;
     if (runLen === 5 && (leftSym === '💎' || leftSym === '7️⃣')) {
       comboKey = 'JACKPOT';
@@ -87,69 +106,62 @@ var Engine = (() => {
       comboKey = 'THREE_KIND';
     } else if (runLen === 2) {
       comboKey = 'MATCH';
-    } else if (maxCount >= 2) {
-      comboKey = 'SCATTER';
+    } else if (scatterCount >= 3) {
+      comboKey  = 'SCATTER';
+      winSymbol = scatterSym;
+      runLen    = scatterCount; // used in highlight to know how many cells lit
     } else {
       comboKey = 'NO_WIN';
     }
 
-    const combo    = CONFIG.COMBOS[comboKey];
+    const combo     = CONFIG.COMBOS[comboKey];
     const baseChips = Math.max(0, rawChips + combo.chips - skullCount * 4);
     const baseMult  = combo.mult;
 
-    return { comboKey, baseChips, baseMult, skullCount, rawSyms };
+    return { comboKey, baseChips, baseMult, skullCount, rawSyms, runLen, winSymbol };
   }
 
   // ── Full spin scoring ─────────────────────────────────────
 
   const COMBO_RANK = ['JACKPOT','FIVE_KIND','FOUR_KIND','THREE_KIND','SCATTER','MATCH','NO_WIN'];
 
-  /**
-   * Score a full grid across all paylines, then apply modifiers.
-   * Returns:
-   *   { chips, mult, score, bestComboKey, lineResults, effects, hitLines, allSymbols }
-   */
   function calculateScore(grid, modIds, deck, isFirstSpin, winStreak) {
     const voidWalker  = modIds.includes('void_walker');
     const glassCannon = modIds.includes('glass_cannon');
 
-    // ── 1. Evaluate each payline ──────────────────────────
+    // 1. Evaluate each payline
     const lineResults = CONFIG.PAYLINES.map((pl, plIdx) => {
       const syms = pl.map((rowIdx, reel) => grid[reel][rowIdx]);
       return { ...evaluatePayline(syms, modIds), plIdx };
     });
 
-    // ── 2. Aggregate ──────────────────────────────────────
-    const hitLines    = lineResults.filter(r => r.comboKey !== 'NO_WIN');
+    // 2. Aggregate
+    const hitLines     = lineResults.filter(r => r.comboKey !== 'NO_WIN');
     const bestComboKey = lineResults.reduce((best, r) =>
       COMBO_RANK.indexOf(r.comboKey) < COMBO_RANK.indexOf(best) ? r.comboKey : best
     , 'NO_WIN');
 
-    // Flat chip sum and best mult
     let totalBaseChips = lineResults.reduce((s, r) => s + r.baseChips, 0);
     let bestMult       = Math.max(...lineResults.map(r => r.baseMult));
 
-    // Skull handling — void_walker or glass_cannon modifies penalty at chip level
-    const allSymbols = grid.flat();
+    const allSymbols  = grid.flat();
     const totalSkulls = allSymbols.filter(s => CONFIG.SYMBOLS[s]?.penalty).length;
+
     if (voidWalker) {
       const voidMod = CONFIG.MODIFIERS.find(m => m.id === 'void_walker');
-      // Skulls already contributed 0 chips in line eval; now add their bonus
       totalBaseChips += totalSkulls * voidMod.effect.value;
     }
     if (glassCannon) {
       const gcMod = CONFIG.MODIFIERS.find(m => m.id === 'glass_cannon');
-      bestMult = parseFloat((bestMult * gcMod.effect.scale).toFixed(2));
-      totalBaseChips -= totalSkulls * 4 * (gcMod.effect.skull_scale - 1); // extra penalty
+      bestMult       = parseFloat((bestMult * gcMod.effect.scale).toFixed(2));
+      totalBaseChips -= totalSkulls * 4 * (gcMod.effect.skull_scale - 1);
     }
-
-    // Gilded Edge: +1.5 mult per scoring line
     if (modIds.includes('gilded_edge')) {
       const ge = CONFIG.MODIFIERS.find(m => m.id === 'gilded_edge');
       bestMult = parseFloat((bestMult + hitLines.length * ge.effect.value).toFixed(2));
     }
 
-    // ── 3. Modifier pipeline ──────────────────────────────
+    // 3. Modifier pipeline
     let modChips = 0;
     let modMult  = 0;
     const effects = [];
@@ -157,14 +169,13 @@ var Engine = (() => {
     for (const modId of modIds) {
       const mod = CONFIG.MODIFIERS.find(m => m.id === modId);
       if (!mod) continue;
-      const e  = mod.effect;
-      let cd   = 0, md = 0;
+      const e = mod.effect;
+      let cd = 0, md = 0;
 
       switch (e.type) {
         case 'win_mult':
           if (hitLines.length > 0) md = e.value;
           break;
-
         case 'per_symbol_mult': {
           const cnt = allSymbols.filter(s => s === e.symbol).length;
           if (cnt > 0) md = e.value * cnt;
@@ -180,11 +191,9 @@ var Engine = (() => {
           if (cnt > 0) { cd = e.chips * cnt; md = e.mult * cnt; }
           break;
         }
-
         case 'per_skull_mult':
           if (totalSkulls > 0) md = e.value * totalSkulls;
           break;
-
         case 'combo_mult':
           if (hitLines.some(r => r.comboKey === e.combo)) md = e.value;
           break;
@@ -198,30 +207,23 @@ var Engine = (() => {
           if (matching > 0) bestMult = parseFloat((bestMult * Math.pow(e.scale, matching)).toFixed(2));
           break;
         }
-
         case 'deck_count_mult': {
           const cnt = deck.filter(s => s === e.symbol).length;
           if (cnt > 0) md = e.value * cnt;
           break;
         }
-
         case 'first_spin_scale':
           if (isFirstSpin) bestMult = parseFloat((bestMult * e.scale).toFixed(2));
           break;
-
         case 'specific_five_chips':
           if (bestComboKey === 'FIVE_KIND' && allSymbols.filter(s => s === e.symbol).length >= 5) cd = e.value;
           break;
-
         case 'per_hit_line':
           if (hitLines.length > 0) cd = e.value * hitLines.length;
           break;
-
         case 'streak_mult':
           if (winStreak > 0) md = e.value * winStreak;
           break;
-
-        // handled before loop:
         case 'global_mult_scale':
         case 'skull_to_chips':
         case 'gilded_edge':
@@ -232,7 +234,7 @@ var Engine = (() => {
 
       if (cd !== 0 || md !== 0) {
         modChips += cd;
-        modMult  = parseFloat((modMult + md).toFixed(2));
+        modMult   = parseFloat((modMult + md).toFixed(2));
         effects.push({ modId, chipsDelta: cd, multDelta: md });
       }
     }

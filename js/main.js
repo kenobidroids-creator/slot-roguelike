@@ -123,7 +123,7 @@ async function spin() {
   // Remove highlights and payline SVG from previous spin
   UI.clearPaylineLines();
   document.querySelectorAll('.symbol').forEach(el => {
-    el.classList.remove('sym-win');
+    el.classList.remove('sym-win', 'sym-dim');
     el.removeAttribute('data-glow');
     el.style.removeProperty('box-shadow');
   });
@@ -207,7 +207,7 @@ function handleShopBuy(idx) {
     game.gold -= item.cost;
     game.playerDeck.push(item.symbol);
     currentShop.items[idx] = null;
-    showToast(`Added ${item.symbol} to deck!`, '#69f0ae');
+    showToast(`Added ${item.symbol} to reel pool!`, '#69f0ae');
   } else if (item.type === 'modifier') {
     if (game.modifiers.length >= maxMods) { showToast('Modifier slots full!', '#f5c518'); return; }
     game.gold -= item.cost;
@@ -252,7 +252,7 @@ function handleRemoveSymbol(sym) {
   game.playerDeck.splice(idx, 1);
   UI.hideRemovePrompt();
   UI.updateSidebar(game);
-  showToast(`Removed ${sym} from deck`, '#ef5350');
+  showToast(`Removed ${sym} from reel pool`, '#ef5350');
   save();
 }
 
@@ -276,7 +276,7 @@ function resetRun() {
     document.getElementById(id)?.classList.remove('active')
   );
   document.getElementById('result-card')?.classList.add('hidden');
-  document.querySelectorAll('.symbol').forEach(el => el.classList.remove('sym-win','sym-lose'));
+  document.querySelectorAll('.symbol').forEach(el => el.classList.remove('sym-win','sym-dim','sym-lose'));
   UI.fillReels(game.playerDeck, null);
   showPreRound();
 }

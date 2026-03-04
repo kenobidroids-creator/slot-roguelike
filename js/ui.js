@@ -104,7 +104,7 @@ var UI = (() => {
   function highlightPaylines(lineResults) {
     // Clear old symbol styles
     document.querySelectorAll('.symbol').forEach(el => {
-      el.classList.remove('sym-win');
+      el.classList.remove('sym-win', 'sym-dim');
       el.removeAttribute('data-glow');
       el.style.removeProperty('box-shadow');
     });
@@ -113,24 +113,40 @@ var UI = (() => {
     const winningLines = lineResults.filter(r => r.comboKey !== 'NO_WIN');
     if (!winningLines.length) return;
 
-    winningLines.forEach(({ comboKey, plIdx }, i) => {
-      const color = PAYLINE_COLORS[plIdx] || '#f5c518';
-      const pl    = CONFIG.PAYLINES[plIdx];
+    winningLines.forEach(({ comboKey, plIdx, runLen, winSymbol }, i) => {
+      const color   = PAYLINE_COLORS[plIdx] || '#f5c518';
+      const pl      = CONFIG.PAYLINES[plIdx];
+      const isScatter = comboKey === 'SCATTER';
 
-      // Glow each winning symbol
       pl.forEach((rowIdx, reel) => {
         const container = document.querySelector(`#reel-${reel} .symbols-container`);
         if (!container) return;
         const el = container.children[TARGET_IDX - 1 + rowIdx];
         if (!el) return;
-        el.classList.add('sym-win');
-        const prev = el.getAttribute('data-glow') || '';
-        el.setAttribute('data-glow', prev + color + ',');
-        el.style.boxShadow = buildGlow(el.getAttribute('data-glow'));
+
+        // Decide if this cell is a "winning" cell:
+        // For left-runs: reels 0..runLen-1
+        // For SCATTER: any cell that matches winSymbol
+        let isWinCell = false;
+        if (isScatter) {
+          isWinCell = (el.textContent.trim() === winSymbol);
+        } else {
+          isWinCell = (reel < runLen);
+        }
+
+        if (isWinCell) {
+          el.classList.add('sym-win');
+          const prev = el.getAttribute('data-glow') || '';
+          el.setAttribute('data-glow', prev + color + ',');
+          el.style.boxShadow = buildGlow(el.getAttribute('data-glow'));
+        } else {
+          // Cells on the line but NOT part of the win get a subtle dim
+          el.classList.add('sym-dim');
+        }
       });
 
-      // Staggered SVG line draw
-      setTimeout(() => drawPaylineSVG(plIdx, color), i * 100);
+      // SVG polyline: full line for runs, dotted between scatter cells
+      setTimeout(() => drawPaylineSVG(plIdx, color, isScatter ? null : runLen), i * 110);
     });
   }
 
@@ -150,7 +166,13 @@ var UI = (() => {
    * Draw an animated SVG polyline for a winning payline.
    * Measures actual reel DOM positions — works at any viewport size.
    */
-  function drawPaylineSVG(plIdx, color) {
+  /**
+   * Draw the payline SVG.
+   * clipAt: how many reels from the left are the "winning" portion (null = full line / scatter).
+   *   Reels 0..clipAt-1  → solid bright animated stroke
+   *   Reels clipAt..4    → dim dashed tail (non-contributing cells)
+   */
+  function drawPaylineSVG(plIdx, color, clipAt) {
     const svg = document.getElementById('payline-svg');
     if (!svg) return;
     const reelsWrap = document.querySelector('.reels-wrap');
@@ -160,36 +182,52 @@ var UI = (() => {
     const symH     = (document.querySelector('.reel')?.offsetHeight || 246) / REEL_ROWS;
     const payline  = CONFIG.PAYLINES[plIdx];
 
-    const points = payline.map((rowIdx, reelIdx) => {
-      const reel = document.getElementById(`reel-${reelIdx}`);
+    // Collect {x,y} per reel
+    const pts = payline.map((rowIdx, ri) => {
+      const reel = document.getElementById('reel-' + ri);
       if (!reel) return null;
-      const reelRect = reel.getBoundingClientRect();
-      const x = reelRect.left - wrapRect.left + reelRect.width / 2;
-      const y = reelRect.top  - wrapRect.top  + rowIdx * symH + symH / 2;
-      return `${x.toFixed(1)},${y.toFixed(1)}`;
-    }).filter(Boolean).join(' ');
+      const r = reel.getBoundingClientRect();
+      return { x: r.left - wrapRect.left + r.width / 2,
+               y: r.top  - wrapRect.top  + rowIdx * symH + symH / 2 };
+    }).filter(Boolean);
 
-    if (!points) return;
+    if (pts.length < 2) return;
 
-    const pl = document.createElementNS('http://www.w3.org/2000/svg', 'polyline');
-    pl.setAttribute('points', points);
-    pl.setAttribute('fill', 'none');
-    pl.setAttribute('stroke', color);
-    pl.setAttribute('stroke-width', '3.5');
-    pl.setAttribute('stroke-linecap', 'round');
-    pl.setAttribute('stroke-linejoin', 'round');
-    pl.classList.add('payline-line');
-    svg.appendChild(pl);
+    function makePoly(points, stroke, width, opacity, dashed, animated) {
+      const el = document.createElementNS('http://www.w3.org/2000/svg', 'polyline');
+      el.setAttribute('points', points.map(p => p.x.toFixed(1) + ',' + p.y.toFixed(1)).join(' '));
+      el.setAttribute('fill', 'none');
+      el.setAttribute('stroke', stroke);
+      el.setAttribute('stroke-width', String(width));
+      el.setAttribute('stroke-linecap', 'round');
+      el.setAttribute('stroke-linejoin', 'round');
+      if (opacity < 1) el.setAttribute('opacity', String(opacity));
+      if (dashed) el.setAttribute('stroke-dasharray', '7 5');
+      el.style.filter = animated ? ('drop-shadow(0 0 5px ' + stroke + ')') : 'none';
+      svg.appendChild(el);
+      if (animated) {
+        const len = el.getTotalLength ? el.getTotalLength() : 400;
+        el.style.strokeDasharray  = len;
+        el.style.strokeDashoffset = len;
+        el.classList.add('payline-line');
+        void el.getBoundingClientRect();
+        el.classList.add('payline-line-draw');
+      }
+      return el;
+    }
 
-    // Animate the stroke being drawn
-    const len = pl.getTotalLength ? pl.getTotalLength() : 600;
-    pl.style.strokeDasharray  = len;
-    pl.style.strokeDashoffset = len;
-    void pl.getBoundingClientRect();
-    pl.classList.add('payline-line-draw');
+    if (clipAt == null || clipAt >= pts.length) {
+      // Scatter or full-line win: draw entire line solid + animated
+      makePoly(pts, color, 3.5, 1, false, true);
+    } else {
+      // Winning run portion: solid, bright, animated
+      makePoly(pts.slice(0, clipAt), color, 3.5, 1, false, true);
+      // Non-contributing tail: dashed, dim, no animation
+      makePoly(pts.slice(clipAt - 1), color, 1.5, 0.28, true, false);
+    }
 
     // Light up matching sidebar indicator dots
-    document.querySelectorAll(`.pl-${plIdx + 1}`).forEach(d => d.classList.add('pl-lit'));
+    document.querySelectorAll('.pl-' + (plIdx + 1)).forEach(d => d.classList.add('pl-lit'));
   }
 
   // ── Jackpot celebration ───────────────────────────────────────────────────
@@ -444,9 +482,28 @@ var UI = (() => {
 
     const plEl = document.getElementById('paytable-paylines');
     if (plEl) {
-      plEl.innerHTML = CONFIG.PAYLINE_NAMES.map((n, i) =>
-        `<div class="pay-row"><span>${i + 1}. ${n}</span><span style="color:var(--text-dim)">Line ${i+1}</span></div>`
-      ).join('');
+      const PL_COLORS = ['#f5c518','#00d4ff','#00e676','#ff6b6b','#c77dff',
+        '#ff9a3c','#a8ff3e','#ff5fcf','#3ef5ff','#ffe566',
+        '#ff7a7a','#7aff7a','#7a7aff','#ffb77a','#b77aff',
+        '#7affb7','#ff7ab7','#ffd07a','#7ab7ff','#d07aff'];
+      plEl.innerHTML = CONFIG.PAYLINES.map(function(pl, i) {
+        var name  = CONFIG.PAYLINE_NAMES[i] || ('Line ' + (i+1));
+        var color = PL_COLORS[i] || '#f5c518';
+        var cx=5, cy=5, r=3, gapX=10, gapY=10;
+        var dots = '';
+        for (var row=0; row<3; row++) {
+          for (var col=0; col<5; col++) {
+            var x=cx+col*gapX, y=cy+row*gapY;
+            dots += '<circle cx="'+x+'" cy="'+y+'" r="'+r+'" fill="'+(pl[col]===row ? color : 'rgba(255,255,255,0.12)')+'"/>';
+          }
+        }
+        var pts = pl.map(function(row,col){ return (cx+col*gapX)+','+(cy+row*gapY); }).join(' ');
+        return '<div class="pay-row payline-diagram-row">'
+          +'<span class="pl-label">'+(i+1)+'. '+name+'</span>'
+          +'<svg width="50" height="30" style="overflow:visible;flex-shrink:0">'
+          +'<polyline points="'+pts+'" fill="none" stroke="'+color+'" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" opacity="0.7"/>'
+          +dots+'</svg></div>';
+      }).join('');
     }
   }
 
